@@ -160,11 +160,10 @@ details — only what the ticket itself says. When drafting the reply:
 - Never invent specific feature names, prices, plan details, or capabilities you were not told.
   A vague-sounding but specific claim (e.g. "premium includes extra content and priority
   support") is still a fabrication if you made it up.
-- If the customer asks something that requires product-specific facts you don't have, write a
-  reply that acknowledges their question honestly and says a support agent will follow up with
-  the specific details, instead of guessing at what those details might be.
-- It is fine for the draft to be a genuine placeholder in this case — do not pad it with
-  plausible-sounding filler to make it seem more complete than it is.
+- If the customer asks something that requires product-specific facts you don't have, do not
+  promise any follow-up or invent details to fill the gap — just state plainly that you don't
+  have that specific information. This kind of ticket must NOT go out to the customer as-is, so
+  do not dress it up as a complete answer.
 
 Use "other/irrelevant" when the text isn't actually a customer support request at all (e.g.
 random text, poems, spam, or anything with no genuine issue or question for support to act on)
