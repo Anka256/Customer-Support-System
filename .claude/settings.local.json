@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(claude-api)",
+      "Bash(python3 -m py_compile app/database.py app/models/db_models.py app/models/schemas.py migrations/env.py migrations/versions/0001_initial_schema.py)",
+      "Bash(python3 -m py_compile app/database.py app/pipeline/*.py)",
+      "Bash(python3 -m py_compile app/security.py app/rate_limit.py app/routes/tickets.py app/main.py)",
+      "Bash(python3 -m py_compile dashboard/app.py)",
+      "Bash(jobs -l)",
+      "Bash(docker *)",
+      "Bash(python3 -m py_compile app/pipeline/nodes.py)",
+      "Bash(pgrep -f \"pip install --quiet -r requirements.txt$\")",
+      "Read(//tmp/**)",
+      "Read(//proc/28680/**)",
+      "Bash(curl -s http://127.0.0.1:8123/health)",
+      "Bash(curl -s -X POST http://127.0.0.1:8123/tickets -H 'Content-Type: application/json' -H 'X-API-Key: test-key' -d '{\"raw_text\": \"Hi, can you tell me the status of my order? It has not arrived yet.\"}')",
+      "Bash(curl -s http://127.0.0.1:8123/tickets -H \"X-API-Key: test-key\")",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s http://127.0.0.1:8123/tickets/__TRACKED_VAR__ -H 'X-API-Key: test-key')",
+      "Bash(netstat -tlnp)",
+      "Bash(pkill -f \"uvicorn app.main:app\")",
+      "Bash(grep -E \"^\\(\\\\.venv|models|\\\\.pytest_cache\\)$\")",
+      "Bash(pkill -9 -f \"uvicorn fake_openrouter\")"
+    ]
+  }
+}

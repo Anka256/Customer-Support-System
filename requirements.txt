@@ -1,0 +1,19 @@
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+langgraph>=0.2.60
+langchain-core>=0.3.25
+sqlalchemy>=2.0.36
+asyncpg>=0.30.0
+psycopg2-binary>=2.9.10
+alembic>=1.14.0
+pydantic>=2.9.0
+pydantic-settings>=2.6.0
+openai>=1.55.0
+python-dotenv>=1.0.1
+slowapi>=0.1.9
+fasttext-wheel>=0.9.2
+numpy<2.0  # fasttext-wheel 0.9.2's C bindings break under NumPy 2.x's stricter copy semantics
+streamlit>=1.40.0
+requests>=2.32.0
+httpx>=0.27.0
+pandas>=2.2.0
