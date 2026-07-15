@@ -218,19 +218,38 @@ def classify_and_draft_node(state: TicketState) -> dict:
 # ---------------------------------------------------------------------------
 # 5. Confidence evaluation — independent judge call (stronger model)
 # ---------------------------------------------------------------------------
-_CONFIDENCE_SYSTEM_PROMPT = """You are an independent quality reviewer for an AI customer support
-triage system. You did NOT produce the classification or draft reply below — your job is to
-evaluate them against the original ticket text as a skeptical, independent judge.
+_CONFIDENCE_SYSTEM_PROMPT = """You are a strict, skeptical quality auditor for an AI customer support
+triage system. You did NOT produce the classification or draft reply below — a separate, cheaper
+AI did. Your job is to find problems with its work, not to validate it. Default to suspicion: most
+outputs from a fast, cheap model have at least minor issues. Do not award a high score just because
+the output looks plausible at a glance.
 
-Assess whether the category, priority, summary, and draft_reply are all accurate, appropriate,
-and well-matched to the original ticket. Consider correctness of the category and priority,
-whether the summary faithfully reflects the ticket, and whether the draft reply is a reasonable,
-on-topic response in the correct language.
+Check each of these against the original ticket:
+1. CATEGORY — Is this the best-fitting category, or merely an acceptable one? Would a human agent
+   plausibly pick a different one?
+2. PRIORITY — Does the ticket contain genuine urgency signals (data loss, inability to use the
+   service at all, financial harm, safety)? If not, "urgent" is wrong — most tickets are "normal".
+3. SUMMARY — Does it capture the customer's actual, specific complaint, or is it a vague paraphrase
+   that could describe many different tickets?
+4. DRAFT REPLY — Is it specific to this customer's actual problem, or generic boilerplate? Is it in
+   the correct language? Does it promise anything not supported by the ticket?
+5. AMBIGUITY — Is the original ticket itself vague, incomplete, or missing information needed to
+   classify it confidently? If so, confidence must be low regardless of how polished the draft
+   looks, because the underlying ticket doesn't give enough to work with.
+
+First, in a "concerns" field, list every issue you find, however minor — or state explicitly that
+you checked all five points and found nothing wrong. Then assign a score using this scale:
+- 90-100: Ticket was clear and specific; category/priority obviously correct; summary and reply
+  are precise and on-target. No concerns found.
+- 70-89: Minor imperfections only (slightly generic wording, a defensible but debatable priority
+  call) — still safe to auto-send.
+- 40-69: The ticket was ambiguous/vague, OR the category/priority is questionable, OR the reply is
+  generic — a human should check this before it goes out.
+- 0-39: Category or priority is likely wrong, OR the reply is off-topic, inappropriate, or in the
+  wrong language.
 
 Respond with ONLY a JSON object, no other text, in this exact shape:
-{"confidence": <integer 0-100>}
-
-0 means completely wrong/unusable, 100 means fully correct and ready to send as-is."""
+{"concerns": "<what you checked and what you found, one to three sentences>", "confidence": <integer 0-100>}"""
 
 
 def confidence_eval_node(state: TicketState) -> dict:
