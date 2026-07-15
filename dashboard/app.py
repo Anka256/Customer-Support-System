@@ -34,6 +34,14 @@ def fetch_ticket_detail(ticket_id: str) -> dict:
     return resp.json()
 
 
+def submit_ticket(raw_text: str) -> dict:
+    resp = requests.post(
+        f"{BACKEND_API_URL}/tickets", headers=HEADERS, json={"raw_text": raw_text}, timeout=60
+    )
+    resp.raise_for_status()
+    return resp.json()
+
+
 def status_badge(status: str) -> str:
     return ":green[**🟢 AUTO READY**]" if status == "auto_ready" else ":orange[**🟡 MANUAL REVIEW**]"
 
@@ -45,6 +53,31 @@ col1, _ = st.columns([1, 5])
 with col1:
     if st.button("🔄 Refresh"):
         st.cache_data.clear()
+
+with st.expander("➕ Submit a test ticket"):
+    with st.form("submit_ticket_form", clear_on_submit=True):
+        new_ticket_text = st.text_area(
+            "Ticket text", height=100, placeholder="Describe the customer's issue..."
+        )
+        submitted = st.form_submit_button("Gönder")
+
+    if submitted:
+        if not new_ticket_text.strip():
+            st.warning("Ticket text is empty.")
+        else:
+            try:
+                result = submit_ticket(new_ticket_text)
+            except requests.RequestException as exc:
+                st.error(f"Submission failed: {exc}")
+            else:
+                # st.toast survives the st.rerun() below — st.success/st.warning would not,
+                # since rerun restarts the script before they'd ever be seen.
+                if result.get("accepted"):
+                    st.toast(f"Ticket accepted — status: {result.get('status')}", icon="✅")
+                else:
+                    st.toast(f"Ticket rejected: {result.get('message')}", icon="⚠️")
+                st.cache_data.clear()
+                st.rerun()
 
 try:
     tickets = fetch_tickets()

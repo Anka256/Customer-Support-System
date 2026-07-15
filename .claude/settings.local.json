@@ -20,7 +20,9 @@
       "Bash(netstat -tlnp)",
       "Bash(pkill -f \"uvicorn app.main:app\")",
       "Bash(grep -E \"^\\(\\\\.venv|models|\\\\.pytest_cache\\)$\")",
-      "Bash(pkill -9 -f \"uvicorn fake_openrouter\")"
+      "Bash(pkill -9 -f \"uvicorn fake_openrouter\")",
+      "Bash(python3 -m py_compile /home/the_architect/Desktop/nativeminds-case-study/app/pipeline/nodes.py)",
+      "Bash(python3 -m py_compile /home/the_architect/Desktop/nativeminds-case-study/dashboard/app.py)"
     ]
   }
 }
