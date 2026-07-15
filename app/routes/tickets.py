@@ -63,3 +63,17 @@ async def get_ticket(
     if ticket is None:
         raise HTTPException(status_code=404, detail="Ticket not found")
     return ticket
+
+
+@router.delete("/{ticket_id}", status_code=204)
+@limiter.limit(settings.rate_limit)
+async def delete_ticket(
+    request: Request, ticket_id: uuid.UUID, db: AsyncSession = Depends(get_db)
+) -> None:
+    """Deletes a ticket and its logs (FK is ON DELETE CASCADE)."""
+    result = await db.execute(select(Ticket).where(Ticket.id == ticket_id))
+    ticket = result.scalar_one_or_none()
+    if ticket is None:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+    await db.delete(ticket)
+    await db.commit()

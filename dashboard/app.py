@@ -42,6 +42,11 @@ def submit_ticket(raw_text: str) -> dict:
     return resp.json()
 
 
+def delete_ticket(ticket_id: str) -> None:
+    resp = requests.delete(f"{BACKEND_API_URL}/tickets/{ticket_id}", headers=HEADERS, timeout=10)
+    resp.raise_for_status()
+
+
 def status_badge(status: str) -> str:
     return ":green[**🟢 AUTO READY**]" if status == "auto_ready" else ":orange[**🟡 MANUAL REVIEW**]"
 
@@ -59,7 +64,7 @@ with st.expander("➕ Submit a test ticket"):
         new_ticket_text = st.text_area(
             "Ticket text", height=100, placeholder="Describe the customer's issue..."
         )
-        submitted = st.form_submit_button("Gönder")
+        submitted = st.form_submit_button("Send")
 
     if submitted:
         if not new_ticket_text.strip():
@@ -176,3 +181,15 @@ else:
                 use_container_width=True,
                 hide_index=True,
             )
+
+    with st.expander("🗑️ Delete this ticket"):
+        st.warning("This permanently deletes the ticket and its logs. This cannot be undone.")
+        if st.button("Confirm Delete", type="primary"):
+            try:
+                delete_ticket(selected_id)
+            except requests.RequestException as exc:
+                st.error(f"Delete failed: {exc}")
+            else:
+                st.toast("Ticket deleted.", icon="🗑️")
+                st.cache_data.clear()
+                st.rerun()
