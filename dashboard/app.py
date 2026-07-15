@@ -151,25 +151,15 @@ else:
         )
 
     st.markdown("**Original ticket:**")
-    st.text_area(
-        "Original ticket text",
-        detail["raw_text"],
-        height=120,
-        disabled=True,
-        label_visibility="collapsed",
-    )
+    # st.code (not a disabled text_area) — disabled inputs block text selection
+    # in most browsers, st.code gets a built-in hover copy button instead.
+    st.code(detail["raw_text"], language=None, height=120)
 
     st.markdown("**Summary:**")
     st.write(detail["summary"] or "—")
 
     st.markdown("**Draft reply:**")
-    st.text_area(
-        "Draft reply",
-        detail["draft_reply"] or "—",
-        height=150,
-        disabled=True,
-        label_visibility="collapsed",
-    )
+    st.code(detail["draft_reply"] or "—", language=None, height=150)
 
     with st.expander("Execution logs (step-by-step pipeline trace)"):
         logs_df = pd.DataFrame(detail["logs"])
