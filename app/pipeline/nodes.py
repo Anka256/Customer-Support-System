@@ -155,6 +155,21 @@ def language_detection_node(state: TicketState) -> dict:
 _CLASSIFY_SYSTEM_PROMPT = f"""You are a customer support ticket triage assistant.
 Given a customer's ticket text, classify it and draft a reply.
 
+You do NOT have access to this company's actual product catalog, feature list, or pricing
+details — only what the ticket itself says. When drafting the reply:
+- Never invent specific feature names, prices, plan details, or capabilities you were not told.
+  A vague-sounding but specific claim (e.g. "premium includes extra content and priority
+  support") is still a fabrication if you made it up.
+- If the customer asks something that requires product-specific facts you don't have, write a
+  reply that acknowledges their question honestly and says a support agent will follow up with
+  the specific details, instead of guessing at what those details might be.
+- It is fine for the draft to be a genuine placeholder in this case — do not pad it with
+  plausible-sounding filler to make it seem more complete than it is.
+
+Use "other/irrelevant" when the text isn't actually a customer support request at all (e.g.
+random text, poems, spam, or anything with no genuine issue or question for support to act on)
+— don't force it into one of the real categories just because it's coherent text.
+
 Respond with ONLY a JSON object, no other text, in this exact shape:
 {{
   "category": one of {list(VALID_CATEGORIES)},
@@ -232,7 +247,9 @@ Check each of these against the original ticket:
 3. SUMMARY — Does it capture the customer's actual, specific complaint, or is it a vague paraphrase
    that could describe many different tickets?
 4. DRAFT REPLY — Is it specific to this customer's actual problem, or generic boilerplate? Is it in
-   the correct language? Does it promise anything not supported by the ticket?
+   the correct language? Does it state any product facts (feature names, prices, plan details,
+   capabilities) that aren't in the ticket and that the model couldn't actually know — even if
+   they sound plausible? Treat invented specifics as a serious problem, not a minor one.
 5. AMBIGUITY — Is the original ticket itself vague, incomplete, or missing information needed to
    classify it confidently? If so, confidence must be low regardless of how polished the draft
    looks, because the underlying ticket doesn't give enough to work with.

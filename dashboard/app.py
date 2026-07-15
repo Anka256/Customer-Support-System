@@ -153,13 +153,13 @@ else:
     st.markdown("**Original ticket:**")
     # st.code (not a disabled text_area) — disabled inputs block text selection
     # in most browsers, st.code gets a built-in hover copy button instead.
-    st.code(detail["raw_text"], language=None, height=120)
+    st.code(detail["raw_text"], language=None, height=120, wrap_lines=True)
 
     st.markdown("**Summary:**")
     st.write(detail["summary"] or "—")
 
     st.markdown("**Draft reply:**")
-    st.code(detail["draft_reply"] or "—", language=None, height=150)
+    st.code(detail["draft_reply"] or "—", language=None, height=150, wrap_lines=True)
 
     with st.expander("Execution logs (step-by-step pipeline trace)"):
         logs_df = pd.DataFrame(detail["logs"])
