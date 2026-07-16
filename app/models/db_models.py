@@ -9,7 +9,7 @@ from app.database import Base
 
 VALID_CATEGORIES = ("refund", "technical_issue", "billing", "general_question", "complaint", "other/irrelevant")
 VALID_PRIORITIES = ("urgent", "normal")
-VALID_STATUSES = ("auto_ready", "manual_review")
+VALID_STATUSES = ("auto_ready", "manual_review", "reviewed_sent")
 
 
 class Ticket(Base):

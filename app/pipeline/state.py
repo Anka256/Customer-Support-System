@@ -25,7 +25,7 @@ class TicketState(TypedDict, total=False):
     summary: str | None
     draft_reply: str | None
     confidence_score: int | None
-    status: str  # "auto_ready" | "manual_review"
+    status: str  # "auto_ready" | "manual_review" | "reviewed_sent"
 
     # Bookkeeping
     retry_count: int  # total retry attempts spent across all LLM-calling nodes
