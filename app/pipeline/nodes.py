@@ -169,11 +169,16 @@ Use "other/irrelevant" when the text isn't actually a customer support request a
 random text, poems, spam, or anything with no genuine issue or question for support to act on)
 — don't force it into one of the real categories just because it's coherent text.
 
+Note the two text fields below are written in different languages on purpose, regardless of
+each other: "summary" is for internal staff and must always be in English, even if the ticket
+is in another language. "draft_reply" goes to the customer and must be in the ticket's own
+language. Do not let one field's language influence the other.
+
 Respond with ONLY a JSON object, no other text, in this exact shape:
 {{
   "category": one of {list(VALID_CATEGORIES)},
   "priority": one of {list(VALID_PRIORITIES)},
-  "summary": "a one to two sentence summary of the ticket",
+  "summary": "a one to two sentence summary of the ticket, always written in English",
   "draft_reply": "a helpful draft reply to send to the customer, written in the same language as the ticket"
 }}
 
