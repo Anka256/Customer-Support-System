@@ -281,44 +281,73 @@ Respond with ONLY a JSON object, no other text, in this exact shape:
 {"concerns": "<what you checked and what you found, one to three sentences>", "confidence": <integer 0-100>}"""
 
 
+def _judge_ticket(state: TicketState, model: str) -> dict:
+    payload = (
+        f"Original ticket text:\n{state['raw_text']}\n\n"
+        f"Detected language: {state.get('detected_language')}\n\n"
+        f"Proposed classification:\n"
+        f"category: {state.get('category')}\n"
+        f"priority: {state.get('priority')}\n"
+        f"summary: {state.get('summary')}\n"
+        f"draft_reply: {state.get('draft_reply')}\n"
+    )
+    data = call_llm_json(model, _CONFIDENCE_SYSTEM_PROMPT, payload)
+    score = data.get("confidence")
+    if isinstance(score, bool) or not isinstance(score, (int, float)):
+        raise LLMCallError(f"invalid confidence score returned: {score!r}")
+    score = round(score)
+    if not (0 <= score <= 100):
+        raise LLMCallError(f"confidence score out of range: {score!r}")
+    return {"confidence_score": score}
+
+
 def confidence_eval_node(state: TicketState) -> dict:
+    """Two-tier judge cascade: a cheap/fast model scores every ticket first.
+    Only scores landing in the ambiguous band get a second opinion from the
+    stronger model — most tickets are clearly good or clearly bad, and only
+    the unclear minority need the expensive model at all."""
     start = time.perf_counter()
+    total_retries = 0
 
-    def _call() -> dict:
-        payload = (
-            f"Original ticket text:\n{state['raw_text']}\n\n"
-            f"Detected language: {state.get('detected_language')}\n\n"
-            f"Proposed classification:\n"
-            f"category: {state.get('category')}\n"
-            f"priority: {state.get('priority')}\n"
-            f"summary: {state.get('summary')}\n"
-            f"draft_reply: {state.get('draft_reply')}\n"
+    fast_result, fast_attempts, fast_error = with_retries(
+        lambda: _judge_ticket(state, settings.confidence_fast_model), settings.max_llm_retries
+    )
+    total_retries += fast_attempts - 1
+
+    needs_escalation = fast_result is None or (
+        settings.confidence_escalation_low
+        <= fast_result["confidence_score"]
+        <= settings.confidence_escalation_high
+    )
+
+    final_result = fast_result
+    final_error = fast_error
+
+    if needs_escalation:
+        escalated_result, escalated_attempts, escalated_error = with_retries(
+            lambda: _judge_ticket(state, settings.confidence_model), settings.max_llm_retries
         )
-        data = call_llm_json(settings.confidence_model, _CONFIDENCE_SYSTEM_PROMPT, payload)
-        score = data.get("confidence")
-        if isinstance(score, bool) or not isinstance(score, (int, float)):
-            raise LLMCallError(f"invalid confidence score returned: {score!r}")
-        score = round(score)
-        if not (0 <= score <= 100):
-            raise LLMCallError(f"confidence score out of range: {score!r}")
-        return {"confidence_score": score}
+        total_retries += escalated_attempts - 1
+        if escalated_result is not None:
+            final_result = escalated_result
+            final_error = None
+        elif final_result is None:
+            final_error = escalated_error
 
-    result, attempts, error = with_retries(_call, settings.max_llm_retries)
     duration_ms = _timed(start)
-    retries_used = attempts - 1
 
-    if result is None:
+    if final_result is None:
         return {
-            "retry_count": state.get("retry_count", 0) + retries_used,
-            "pipeline_error": f"confidence evaluation failed after {attempts} attempts: {error}",
+            "retry_count": state.get("retry_count", 0) + total_retries,
+            "pipeline_error": f"confidence evaluation failed: {final_error}",
             "step_logs": append_log(
-                state.get("step_logs"), "confidence_eval", duration_ms, False, error
+                state.get("step_logs"), "confidence_eval", duration_ms, False, final_error
             ),
         }
 
     return {
-        **result,
-        "retry_count": state.get("retry_count", 0) + retries_used,
+        **final_result,
+        "retry_count": state.get("retry_count", 0) + total_retries,
         "step_logs": append_log(state.get("step_logs"), "confidence_eval", duration_ms, True),
     }
 
