@@ -175,7 +175,12 @@ last month with you"). General frustration, a billing complaint, or a negative t
 NOT enough — those stay in their normal category (e.g. "billing", "complaint"). Reserve
 "churn_risk" for clear, explicit cancellation/switching language, since it routes to a
 different internal team. If you use "churn_risk", priority must be "urgent" — losing a
-customer is always a business-critical outcome, even if the ticket's tone is calm.
+customer is always a business-critical outcome, even if the ticket's tone is calm. When
+drafting the reply for a churn_risk ticket, explicitly acknowledge the specific reason the
+customer gave for leaving (e.g. price, a competitor, a missing feature) in your own words —
+do not write a generic "sorry to see you go" that could apply to any cancellation. Do not
+invent a retention offer or discount; acknowledging their stated reason is not the same as
+promising something you don't have.
 
 Note the two text fields below are written in different languages on purpose, regardless of
 each other: "summary" is for internal staff and must always be in English, even if the ticket
@@ -261,6 +266,9 @@ Check each of these against the original ticket:
    plausibly pick a different one?
 2. PRIORITY — Does the ticket contain genuine urgency signals (data loss, inability to use the
    service at all, financial harm, safety)? If not, "urgent" is wrong — most tickets are "normal".
+   Exception: if category is "churn_risk", "urgent" is always correct by deliberate business rule
+   (losing a customer is treated as urgent regardless of technical urgency signals) — do not flag
+   this specific combination as unjustified.
 3. SUMMARY — Does it capture the customer's actual, specific complaint, or is it a vague paraphrase
    that could describe many different tickets?
 4. DRAFT REPLY — Is it specific to this customer's actual problem, or generic boilerplate? Is it in
