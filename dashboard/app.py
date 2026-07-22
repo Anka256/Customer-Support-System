@@ -54,6 +54,13 @@ def fetch_rejected() -> list[dict]:
     return resp.json()
 
 
+def delete_rejected_log(log_id: str) -> None:
+    resp = requests.delete(
+        f"{BACKEND_API_URL}/tickets/rejected/{log_id}", headers=HEADERS, timeout=10
+    )
+    resp.raise_for_status()
+
+
 def status_badge(status: str) -> str:
     return ":green[**🟢 AUTO READY**]" if status == "auto_ready" else ":orange[**🟡 MANUAL REVIEW**]"
 
@@ -209,8 +216,29 @@ with st.expander("🚫 Rejected tickets (validation / prompt injection)"):
             st.write("No rejected tickets.")
         else:
             rejected_df = pd.DataFrame(rejected)
-            st.dataframe(
+            rejected_event = st.dataframe(
                 rejected_df[["step_name", "error_message", "raw_text", "created_at"]],
                 use_container_width=True,
                 hide_index=True,
+                on_select="rerun",
+                selection_mode="single-row",
+                key="rejected_table",
             )
+
+            rejected_selected_rows = (
+                rejected_event.selection.rows
+                if rejected_event and rejected_event.selection
+                else []
+            )
+            if rejected_selected_rows:
+                selected_log_id = rejected_df.iloc[rejected_selected_rows[0]]["id"]
+                st.warning("This permanently deletes this rejected log entry. This cannot be undone.")
+                if st.button("🗑️ Delete selected rejected entry", type="primary"):
+                    try:
+                        delete_rejected_log(selected_log_id)
+                    except requests.RequestException as exc:
+                        st.error(f"Delete failed: {exc}")
+                    else:
+                        st.toast("Rejected log entry deleted.", icon="🗑️")
+                        st.cache_data.clear()
+                        st.rerun()

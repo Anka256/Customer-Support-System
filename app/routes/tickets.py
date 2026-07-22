@@ -73,6 +73,22 @@ async def list_rejected_tickets(
     return list(result.scalars().all())
 
 
+@router.delete("/rejected/{log_id}", status_code=204)
+@limiter.limit(settings.rate_limit)
+async def delete_rejected_log(
+    request: Request, log_id: uuid.UUID, db: AsyncSession = Depends(get_db)
+) -> None:
+    """Deletes a single rejected-ticket log entry (ticket_id IS NULL). Only
+    ever touches orphan logs — logs belonging to a real ticket are deleted
+    via `delete_ticket`'s cascade instead."""
+    result = await db.execute(select(Log).where(Log.id == log_id, Log.ticket_id.is_(None)))
+    log = result.scalar_one_or_none()
+    if log is None:
+        raise HTTPException(status_code=404, detail="Rejected log entry not found")
+    await db.delete(log)
+    await db.commit()
+
+
 @router.get("/{ticket_id}", response_model=TicketDetail)
 @limiter.limit(settings.rate_limit)
 async def get_ticket(
