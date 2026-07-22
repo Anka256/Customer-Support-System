@@ -85,7 +85,7 @@ def injection_check_node(state: TicketState) -> dict:
             "rejection_step": "injection_check",
             "retry_count": state.get("retry_count", 0) + retries_used,
             "step_logs": append_log(
-                state.get("step_logs"), "injection_check", duration_ms, True
+                state.get("step_logs"), "injection_check", duration_ms, False, reason
             ),
         }
 
@@ -215,6 +215,11 @@ def classify_and_draft_node(state: TicketState) -> dict:
         if not summary or not draft_reply:
             raise LLMCallError("missing summary or draft_reply in response")
 
+        # Enforced in code rather than trusting the model to always follow the
+        # prompt's instruction — losing a customer is always business-critical.
+        if category == "churn_risk":
+            priority = "urgent"
+
         return {
             "category": category,
             "priority": priority,
@@ -261,7 +266,11 @@ Check each of these against the original ticket:
 4. DRAFT REPLY — Is it specific to this customer's actual problem, or generic boilerplate? Is it in
    the correct language? Does it state any product facts (feature names, prices, plan details,
    capabilities) that aren't in the ticket and that the model couldn't actually know — even if
-   they sound plausible? Treat invented specifics as a serious problem, not a minor one.
+   they sound plausible? Treat invented specifics as a serious problem, not a minor one. Exception:
+   for "churn_risk" tickets, do not penalize the reply for failing to offer a discount or retention
+   deal — the model has no authority or real data to make such offers, and inventing one would
+   itself be a fabrication. Acknowledging the customer's stated reason and noting that a specialist
+   will follow up is the correct, honest response here, not a shortcoming.
 5. AMBIGUITY — Is the original ticket itself vague, incomplete, or missing information needed to
    classify it confidently? If so, confidence must be low regardless of how polished the draft
    looks, because the underlying ticket doesn't give enough to work with.
