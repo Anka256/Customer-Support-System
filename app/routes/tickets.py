@@ -8,8 +8,14 @@ from sqlalchemy.orm import selectinload
 
 from app.config import get_settings
 from app.database import get_db
-from app.models.db_models import Ticket
-from app.models.schemas import TicketCreate, TicketCreateResponse, TicketDetail, TicketListItem
+from app.models.db_models import Log, Ticket
+from app.models.schemas import (
+    RejectedLogItem,
+    TicketCreate,
+    TicketCreateResponse,
+    TicketDetail,
+    TicketListItem,
+)
 from app.pipeline.graph import run_pipeline
 from app.rate_limit import limiter
 from app.security import verify_api_key
@@ -48,6 +54,22 @@ async def list_tickets(
     request: Request, db: AsyncSession = Depends(get_db)
 ) -> list[Ticket]:
     result = await db.execute(select(Ticket).order_by(Ticket.created_at.desc()))
+    return list(result.scalars().all())
+
+
+@router.get("/rejected", response_model=list[RejectedLogItem])
+@limiter.limit(settings.rate_limit)
+async def list_rejected_tickets(
+    request: Request, db: AsyncSession = Depends(get_db)
+) -> list[Log]:
+    """Lists tickets that never made it into `tickets` — rejected by
+    validation or a confirmed prompt injection attempt. These only exist
+    as orphan `logs` rows (ticket_id IS NULL), for audit visibility."""
+    result = await db.execute(
+        select(Log)
+        .where(Log.ticket_id.is_(None), Log.success.is_(False))
+        .order_by(Log.created_at.desc())
+    )
     return list(result.scalars().all())
 
 

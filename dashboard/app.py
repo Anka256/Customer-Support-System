@@ -47,6 +47,13 @@ def delete_ticket(ticket_id: str) -> None:
     resp.raise_for_status()
 
 
+@st.cache_data(ttl=10)
+def fetch_rejected() -> list[dict]:
+    resp = requests.get(f"{BACKEND_API_URL}/tickets/rejected", headers=HEADERS, timeout=10)
+    resp.raise_for_status()
+    return resp.json()
+
+
 def status_badge(status: str) -> str:
     return ":green[**🟢 AUTO READY**]" if status == "auto_ready" else ":orange[**🟡 MANUAL REVIEW**]"
 
@@ -183,3 +190,24 @@ else:
                 st.toast("Ticket deleted.", icon="🗑️")
                 st.cache_data.clear()
                 st.rerun()
+
+st.divider()
+with st.expander("🚫 Rejected tickets (validation / prompt injection)"):
+    st.caption(
+        "Tickets that never made it into the main list — rejected before ever being "
+        "written to `tickets`, kept here only for audit visibility."
+    )
+    try:
+        rejected = fetch_rejected()
+    except requests.RequestException as exc:
+        st.error(f"Could not load rejected tickets: {exc}")
+    else:
+        if not rejected:
+            st.write("No rejected tickets.")
+        else:
+            rejected_df = pd.DataFrame(rejected)
+            st.dataframe(
+                rejected_df[["step_name", "error_message", "created_at"]],
+                use_container_width=True,
+                hide_index=True,
+            )

@@ -33,6 +33,18 @@ class LogEntry(BaseModel):
     created_at: datetime
 
 
+class RejectedLogItem(BaseModel):
+    """A log entry for a ticket that was rejected (validation failure or
+    confirmed prompt injection) and therefore never made it into `tickets`."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    step_name: str
+    error_message: str | None
+    created_at: datetime
+
+
 class TicketListItem(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
