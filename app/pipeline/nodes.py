@@ -169,6 +169,14 @@ Use "other/irrelevant" when the text isn't actually a customer support request a
 random text, poems, spam, or anything with no genuine issue or question for support to act on)
 — don't force it into one of the real categories just because it's coherent text.
 
+Use "churn_risk" ONLY when the customer explicitly signals intent to cancel or switch to a
+competitor (e.g. "I'm cancelling my subscription", "I'm switching to [competitor]", "this is my
+last month with you"). General frustration, a billing complaint, or a negative tone alone is
+NOT enough — those stay in their normal category (e.g. "billing", "complaint"). Reserve
+"churn_risk" for clear, explicit cancellation/switching language, since it routes to a
+different internal team. If you use "churn_risk", priority must be "urgent" — losing a
+customer is always a business-critical outcome, even if the ticket's tone is calm.
+
 Note the two text fields below are written in different languages on purpose, regardless of
 each other: "summary" is for internal staff and must always be in English, even if the ticket
 is in another language. "draft_reply" goes to the customer and must be in the ticket's own
