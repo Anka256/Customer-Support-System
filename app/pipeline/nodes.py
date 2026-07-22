@@ -298,7 +298,7 @@ def _judge_ticket(state: TicketState, model: str) -> dict:
     score = round(score)
     if not (0 <= score <= 100):
         raise LLMCallError(f"confidence score out of range: {score!r}")
-    return {"confidence_score": score}
+    return {"confidence_score": score, "confidence_concerns": data.get("concerns")}
 
 
 def confidence_eval_node(state: TicketState) -> dict:
@@ -405,12 +405,17 @@ def persist_node(state: TicketState) -> dict:
                 summary=state.get("summary"),
                 draft_reply=state.get("draft_reply"),
                 confidence_score=state.get("confidence_score"),
+                confidence_concerns=state.get("confidence_concerns"),
                 status=state.get("status", "manual_review"),
                 retry_count=state.get("retry_count", 0),
             )
             session.add(ticket)
             session.flush()  # populate ticket.id before we reference it in logs
             ticket_id = ticket.id
+
+        # Rejected tickets never get a `tickets` row, so the only place their
+        # original text survives is here — attach it to their log entries.
+        log_raw_text = state["raw_text"] if state.get("rejected") else None
 
         for entry in state.get("step_logs", []):
             session.add(
@@ -420,6 +425,7 @@ def persist_node(state: TicketState) -> dict:
                     duration_ms=entry["duration_ms"],
                     success=entry["success"],
                     error_message=entry["error_message"],
+                    raw_text=log_raw_text,
                 )
             )
 

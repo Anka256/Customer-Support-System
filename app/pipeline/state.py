@@ -25,6 +25,7 @@ class TicketState(TypedDict, total=False):
     summary: str | None
     draft_reply: str | None
     confidence_score: int | None
+    confidence_concerns: str | None
     status: str  # "auto_ready" | "manual_review" | "reviewed_sent"
 
     # Bookkeeping
@@ -46,6 +47,7 @@ def new_state(raw_text: str) -> TicketState:
         summary=None,
         draft_reply=None,
         confidence_score=None,
+        confidence_concerns=None,
         status="manual_review",
         retry_count=0,
         pipeline_error=None,

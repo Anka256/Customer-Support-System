@@ -42,6 +42,7 @@ class RejectedLogItem(BaseModel):
     id: uuid.UUID
     step_name: str
     error_message: str | None
+    raw_text: str | None
     created_at: datetime
 
 
@@ -68,6 +69,7 @@ class TicketDetail(BaseModel):
     summary: str | None
     draft_reply: str | None
     confidence_score: int | None
+    confidence_concerns: str | None
     status: str
     retry_count: int
     created_at: datetime

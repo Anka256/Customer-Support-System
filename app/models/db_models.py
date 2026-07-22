@@ -47,6 +47,7 @@ class Ticket(Base):
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     draft_reply: Mapped[str | None] = mapped_column(Text, nullable=True)
     confidence_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    confidence_concerns: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String(16), nullable=False, default="manual_review")
     retry_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(
@@ -73,6 +74,10 @@ class Log(Base):
     duration_ms: Mapped[int] = mapped_column(Integer, nullable=False)
     success: Mapped[bool] = mapped_column(nullable=False)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Only populated for rejection logs (ticket_id IS NULL) — the ticket's
+    # own text otherwise lives on `tickets.raw_text`, so storing it here too
+    # would be redundant for logs tied to a real ticket.
+    raw_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

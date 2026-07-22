@@ -168,6 +168,9 @@ else:
     st.markdown("**Draft reply:**")
     st.code(detail["draft_reply"] or "—", language=None, height=150, wrap_lines=True)
 
+    st.markdown("**Confidence judge's concerns:**")
+    st.write(detail.get("confidence_concerns") or "—")
+
     with st.expander("Execution logs (step-by-step pipeline trace)"):
         logs_df = pd.DataFrame(detail["logs"])
         if logs_df.empty:
@@ -207,7 +210,7 @@ with st.expander("🚫 Rejected tickets (validation / prompt injection)"):
         else:
             rejected_df = pd.DataFrame(rejected)
             st.dataframe(
-                rejected_df[["step_name", "error_message", "created_at"]],
+                rejected_df[["step_name", "error_message", "raw_text", "created_at"]],
                 use_container_width=True,
                 hide_index=True,
             )
